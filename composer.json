@@ -1,5 +1,5 @@
 {
-  "name": "offsite-solutions/eisodos-db-oracle",
+  "name": "offsite-solutions/eisodos-db-connector-oracle",
   "description": "Eisodos DB Connector - ORACLE",
   "type": "library",
   "authors": [
@@ -27,8 +27,7 @@
   ],
   "require": {
     "php": ">=7.2.0",
-    "offsite-solutions/eisodos": "@dev",
-    "offsite-solutions/eisodos-db-connectors": "@dev"
+    "offsite-solutions/eisodos": "@dev"
   },
   "require-dev": {
   },
