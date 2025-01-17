@@ -1,2 +1,3 @@
-# EisodosDBOracle
-Eisodos FW ORACLE Database Connector
+# ConnectorOCI8
+
+Eisodos Framework ORACLE Database Connector
