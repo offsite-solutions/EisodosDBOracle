@@ -89,7 +89,7 @@
      * @param array $boundVariables_ Bound variables array structure
      * @return void
      */
-    private function _bindVariables($statement_, &$boundVariables_): void {
+    private function _bindVariables($statement_, array &$boundVariables_): void {
       
       foreach ($boundVariables_ as $variableName => &$variableProperties) {
         // get OCI constant by incoming data type
@@ -141,7 +141,7 @@
      * @param array $boundVariables_ Bound variables
      * @return void
      */
-    private function _freeVariables(&$boundVariables_): void {
+    private function _freeVariables(array &$boundVariables_): void {
       
       foreach ($boundVariables_ as &$variableProperties) {
         
@@ -164,7 +164,7 @@
      * @param string $exceptionMessage_ Exception message, if filled exception threw in case of error
      * @return bool|mixed
      */
-    private function &_execute($statement_, $exceptionMessage_ = '') {
+    private function &_execute($statement_, $exceptionMessage_ = ''): mixed {
       $transactionMode = $this->inTransaction() ? OCI_NO_AUTO_COMMIT : OCI_COMMIT_ON_SUCCESS;
       $result = oci_execute($statement_, $transactionMode);
       if ($result === false) {
@@ -188,7 +188,7 @@
      * @param string $exceptionMessage_ Exception message, if filled exception threw in case of error
      * @return false|mixed|resource
      */
-    private function &_parse($SQL_, $exceptionMessage_ = '') {
+    private function &_parse(string $SQL_, string $exceptionMessage_ = '') {
       
       $SQL_ = str_replace("\r\n", "\n", $SQL_); // for fixing end-of-line character in the PL/SQL in windows
       $statement = oci_parse($this->_connection, $SQL_);
@@ -304,7 +304,7 @@
     /**
      * @inheritDoc
      */
-    public function startTransaction($savePoint_ = NULL): void {
+    public function startTransaction(string $savePoint_ = NULL): void {
       $this->_checkConnection();
       
       if (!$this->inTransaction()) {
@@ -361,7 +361,7 @@
     /**
      * @inheritDoc
      */
-    public function query(int $resultTransformation_, string $SQL_, &$queryResult_ = NULL, $getOptions_ = [], $exceptionMessage_ = '') {
+    public function query(int $resultTransformation_, string $SQL_, &$queryResult_ = NULL, $getOptions_ = [], $exceptionMessage_ = ''):mixed {
       $this->_lastQueryColumnNames = [];
       $this->_lastQueryTotalRows = 0;
       
@@ -542,7 +542,7 @@
     /**
      * @inheritDoc
      */
-    public function executePreparedDML(string $SQL_, $dataTypes_ = [], $data_ = [], $throwException_ = true): int|bool {
+    public function executePreparedDML(string $SQL_, array $dataTypes_ = [], array &$data_ = [], bool $throwException_ = true):int|bool {
       throw new RuntimeException('Execute prepared DML not supported! Use executePreparedDML2()!');
     }
     
@@ -661,7 +661,7 @@
     /**
      * @inheritDoc
      */
-    public function getConnection() {
+    public function getConnection():mixed {
       return $this->_connection;
     }
     
