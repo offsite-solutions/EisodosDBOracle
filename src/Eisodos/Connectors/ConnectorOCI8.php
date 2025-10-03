@@ -24,6 +24,9 @@
    * connectSQL=list of query run after connection separated by ;
    */
   class ConnectorOCI8 implements DBConnectorInterface {
+  
+    /** @var string DB Syntax */
+    private string $_dbSyntax='oci8';
     
     /** @var resource Connection resource */
     private $_connection;
@@ -723,4 +726,10 @@
       return $this->emptySQLField(Eisodos::$parameterHandler->getParam($parameterName_), $isString_, $maxLength_, $exception_, $withComma_, 'DEFAULT');
     }
     
+    /**
+     * @inheritDoc
+     */
+    public function DBSyntax(): string {
+      return $this->_dbSyntax;
+    }
   }
