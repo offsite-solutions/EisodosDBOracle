@@ -24,9 +24,9 @@
    * connectSQL=list of query run after connection separated by ;
    */
   class ConnectorOCI8 implements DBConnectorInterface {
-  
+    
     /** @var string DB Syntax */
-    private string $_dbSyntax='oci8';
+    private string $_dbSyntax = 'oci8';
     
     /** @var resource Connection resource */
     private $_connection;
@@ -307,7 +307,7 @@
     /**
      * @inheritDoc
      */
-    public function startTransaction(string $savePoint_ = NULL): void {
+    public function startTransaction(string|null $savePoint_ = NULL): void {
       $this->_checkConnection();
       
       if (!$this->inTransaction()) {
@@ -337,7 +337,7 @@
      * @inheritDoc
      * @throws Exception
      */
-    public function rollback($savePoint_ = NULL): void {
+    public function rollback(string|null $savePoint_ = NULL): void {
       $this->_checkConnection();
       
       if ($this->inTransaction()) {
@@ -364,7 +364,7 @@
     /**
      * @inheritDoc
      */
-    public function query(int $resultTransformation_, string $SQL_, &$queryResult_ = NULL, $getOptions_ = [], $exceptionMessage_ = ''):mixed {
+    public function query(int $resultTransformation_, string $SQL_, &$queryResult_ = NULL, $getOptions_ = [], $exceptionMessage_ = ''): mixed {
       $this->_lastQueryColumnNames = [];
       $this->_lastQueryTotalRows = 0;
       
@@ -543,9 +543,10 @@
     }
     
     /**
+     * @deprecated Execute prepared DML not supported! Use executePreparedDML2()
      * @inheritDoc
      */
-    public function executePreparedDML(string $SQL_, array $dataTypes_ = [], array &$data_ = [], bool $throwException_ = true):int|bool {
+    public function executePreparedDML(string $SQL_, array $dataTypes_ = [], array &$data_ = [], bool $throwException_ = true): int|bool {
       throw new RuntimeException('Execute prepared DML not supported! Use executePreparedDML2()!');
     }
     
@@ -664,7 +665,7 @@
     /**
      * @inheritDoc
      */
-    public function getConnection():mixed {
+    public function getConnection(): mixed {
       return $this->_connection;
     }
     
