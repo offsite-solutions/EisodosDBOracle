@@ -144,9 +144,9 @@
      * @param array $boundVariables_ Bound variables
      * @return void
      */
-    private function _freeVariables(array &$boundVariables_): void {
+    private function _freeVariables(array $boundVariables_, array &$resultVariables_): void {
       
-      foreach ($boundVariables_ as &$variableProperties) {
+      foreach ($boundVariables_ as $variableName => &$variableProperties) {
         
         // free OCILob objects
         if ($variableProperties['descriptor'] !== false) {
@@ -154,9 +154,10 @@
           $variableProperties['descriptor'] = false;
         }
         
+        $resultVariables_[$variableName] = $variableProperties['boundValue'];
+        
         // value is overwritten by outgoing values in case of OUT, IN_OUT parameters
         if (str_contains($variableProperties['mode_'], 'OUT')) {
-          $variableProperties['value'] = $variableProperties['boundValue'];
           $variableProperties['boundValue'] = '';
         }
       }
@@ -311,12 +312,10 @@
       $this->_checkConnection();
       
       if (!$this->inTransaction()) {
-        if ($savePoint_ !== NULL) {
+        if ($savePoint_ !== NULL  && $savePoint_!=='') {
           $this->query(RT_RAW, 'SAVEPOINT ' . $savePoint_);
         }
         $this->_inTransaction = true;
-      } else {
-        throw new RuntimeException('Transaction already started!');
       }
     }
     
@@ -606,11 +605,11 @@
       $this->_checkConnection();
       
       // keep input variables in the result array
-      $resultVariables_ = $inputVariables_;
+      // $resultVariables_ = $inputVariables_;
       
       // generate stored procedure sql command from incoming parameters
       $sql = '';
-      foreach ($resultVariables_ as $parameterName => $parameterProperties) {
+      foreach ($inputVariables_ as $parameterName => $parameterProperties) {
         $sql .= ($sql ? ',' : '') . $parameterName . ' => :' . $parameterName;
       }
       $sql = 'BEGIN ' . $procedureName_ . '(' . $sql . '); END; ';
@@ -623,14 +622,14 @@
         return false;
       }
       
-      $this->_bindVariables($statement, $resultVariables_);
+      $this->_bindVariables($statement, $inputVariables_);
       
       try {
         $executeResult = $this->_execute($statement, $throwException_ ? 'Stored Procedure Exception' : '');
         
-        $this->_freeVariables($resultVariables_);
+        $this->_freeVariables($inputVariables_, $resultVariables_);
         if ($statement) {
-          oci_free_statement($statement);
+          // TODO check oci_free_statement($statement);
         }
         if ($executeResult === false) {
           
@@ -638,7 +637,7 @@
         }
         
       } catch (Exception $e) {
-        $this->_freeVariables($resultVariables_);
+        $this->_freeVariables($inputVariables_);
         if ($statement) {
           oci_free_statement($statement);
         }
