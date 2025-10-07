@@ -43,6 +43,12 @@
     /** @var bool Auto commit enabled */
     private bool $_autoCommit = false;
     
+    /** @var int Switch case of response objects name */
+    private int $_caseQuery = CASE_UPPER;
+    
+    /** @var int Switch case of response objects name */
+    private int $_caseStoredProcedure = CASE_UPPER;
+    
     public function __destruct() {
       $this->disconnect();
     }
@@ -161,6 +167,8 @@
           $variableProperties['boundValue'] = '';
         }
       }
+      unset($variableProperties);
+      
     }
     
     /** OCI execute routine
@@ -270,6 +278,9 @@
         
         $this->_autoCommit = (Eisodos::$utils->safe_array_value($databaseConfig, 'autocommit') === 'true');
         
+        $this->_caseQuery = (Eisodos::$utils->safe_array_value($databaseConfig, 'caseQuery') === 'lower') ? CASE_LOWER : CASE_UPPER;
+        $this->_caseStoredProcedure = (Eisodos::$utils->safe_array_value($databaseConfig, 'caseStoredProcedure') === 'lower') ? CASE_LOWER : CASE_UPPER;
+        
         if (!$this->_autoCommit) {
           $this->_inTransaction = true;
         }
@@ -312,7 +323,7 @@
       $this->_checkConnection();
       
       if (!$this->inTransaction()) {
-        if ($savePoint_ !== NULL  && $savePoint_!=='') {
+        if ($savePoint_ !== NULL && $savePoint_ !== '') {
           $this->query(RT_RAW, 'SAVEPOINT ' . $savePoint_);
         }
         $this->_inTransaction = true;
@@ -402,6 +413,10 @@
           return false;
         }
         
+        foreach ($rows as &$row) {
+          $row = array_change_key_case($row, $this->_caseQuery);
+        }
+        unset($row);
         $queryResult_ = $rows;
         $this->_lastQueryTotalRows = count($rows);
         
@@ -417,7 +432,7 @@
           return false;
         }
         
-        $queryResult_ = $rows[0];
+        $queryResult_ = array_change_key_case($rows[0], $this->_caseQuery);;
         $this->_lastQueryTotalRows = 1;
         
         return true;
@@ -452,12 +467,25 @@
           }
         } else if ($resultTransformation_ === RT_ALL_ROWS) {
           oci_fetch_all($statement, $queryResult_, 0, -1, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC);
+          foreach ($queryResult_ as &$row) {
+            $row = array_change_key_case($row, $this->_caseQuery);
+          }
+          unset($row);
         } else if ($resultTransformation_ === RT_ALL_ROWS_ASSOC) {
           $indexFieldName = Eisodos::$utils->safe_array_value($getOptions_, 'indexFieldName', false);
           if (!$indexFieldName) {
             throw new RuntimeException('Index field name is mandatory on RT_ALL_ROWS_ASSOC result type');
           }
+          switch ($this->_caseQuery) {
+            case CASE_LOWER:
+              $indexFieldName = strtolower($indexFieldName);
+              break;
+            default:
+              $indexFieldName = strtoupper($indexFieldName);
+              break;
+          }
           while ($row = oci_fetch_assoc($statement)) {
+            $row = array_change_key_case($row, $this->_caseQuery);
             $queryResult_[$row[$indexFieldName]] = $row;
           }
         }
@@ -614,7 +642,7 @@
       }
       $sql = 'BEGIN ' . $procedureName_ . '(' . $sql . '); END; ';
       
-      Eisodos::$logger->trace("Executing stored procedure: \n" . $sql);
+      Eisodos::$logger->debug("Executing stored procedure: \n" . $sql);
       
       $statement = $this->_parse($sql, $throwException_ ? 'Stored Procedure Exception' : '');
       if ($statement === false) {
@@ -628,18 +656,21 @@
         $executeResult = $this->_execute($statement, $throwException_ ? 'Stored Procedure Exception' : '');
         
         $this->_freeVariables($inputVariables_, $resultVariables_);
-        if ($statement) {
-          // TODO check oci_free_statement($statement);
-        }
+        $resultVariables_ = array_change_key_case($resultVariables_, $this->_caseStoredProcedure);
         if ($executeResult === false) {
-          
           return false;
+        }
+        if ($statement) {
+          oci_free_statement($statement);
         }
         
       } catch (Exception $e) {
-        $this->_freeVariables($inputVariables_);
-        if ($statement) {
-          oci_free_statement($statement);
+        try {
+          $this->_freeVariables($inputVariables_);
+          if ($statement) {
+            oci_free_statement($statement);
+          }
+        } catch (Exception $e2) {
         }
         throw $e;
       }
@@ -731,5 +762,21 @@
      */
     public function DBSyntax(): string {
       return $this->_dbSyntax;
+    }
+    
+    /**
+     * @inheritDoc
+     */
+    public function toList(mixed $value_, bool $isString_ = true, int $maxLength_ = 0, string $exception_ = '', bool $withComma_ = false): string {
+      $result = '';
+      foreach (explode(',', $value_) as $value) {
+        $result .= ($result === '' ? '' : ',') . $this->nullStr(trim($value), $isString_, $maxLength_, $exception_);
+      }
+      $result = '(' . $result . ')';
+      if ($withComma_) {
+        $result .= ", ";
+      }
+      
+      return $result;
     }
   }
