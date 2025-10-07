@@ -1,4 +1,8 @@
 /.idea
 /vendor
 /composer.lock
-/tests/logs/
+/docs
+/composer.dev.json
+/composer.dev.lock
+/composer_update_dev.sh
+/composer_update_prod.sh

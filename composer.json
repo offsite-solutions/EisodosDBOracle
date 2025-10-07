@@ -9,30 +9,10 @@
     }
   ],
   "minimum-stability": "stable",
-  "repositories": [
-    {
-        "type": "path",
-        "url": "../../Base",
-        "options": {
-            "symlink": true
-        }
-    },
-    {
-        "type": "path",
-        "url": "../../DBConnector",
-        "options": {
-            "symlink": true
-        }
-    }
-  ],
   "require": {
     "php": ">=8.4.0",
     "offsite-solutions/eisodos": "^1.1.6",
     "ext-oci8": "*"
-  },
-  "require-dev": {
-  },
-  "suggest": {
   },
   "autoload": {
     "psr-0": {
