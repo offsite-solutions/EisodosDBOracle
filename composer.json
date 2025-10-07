@@ -8,7 +8,7 @@
       "email": "info@offsite-solutions.com"
     }
   ],
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "repositories": [
     {
         "type": "path",
@@ -27,7 +27,7 @@
   ],
   "require": {
     "php": ">=8.4.0",
-    "offsite-solutions/eisodos": "@dev",
+    "offsite-solutions/eisodos": "^1.1.6",
     "ext-oci8": "*"
   },
   "require-dev": {

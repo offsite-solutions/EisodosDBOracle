@@ -278,8 +278,8 @@
         
         $this->_autoCommit = (Eisodos::$utils->safe_array_value($databaseConfig, 'autocommit') === 'true');
         
-        $this->_caseQuery = (Eisodos::$utils->safe_array_value($databaseConfig, 'caseQuery') === 'lower') ? CASE_LOWER : CASE_UPPER;
-        $this->_caseStoredProcedure = (Eisodos::$utils->safe_array_value($databaseConfig, 'caseStoredProcedure') === 'lower') ? CASE_LOWER : CASE_UPPER;
+        $this->_caseQuery = (Eisodos::$utils->safe_array_value($databaseConfig, 'casequery') === 'lower') ? CASE_LOWER : CASE_UPPER;
+        $this->_caseStoredProcedure = (Eisodos::$utils->safe_array_value($databaseConfig, 'casestoredprocedure') === 'lower') ? CASE_LOWER : CASE_UPPER;
         
         if (!$this->_autoCommit) {
           $this->_inTransaction = true;
@@ -399,7 +399,7 @@
       
       
       for ($i = 1; $i <= oci_num_fields($statement); $i++) {
-        $this->_lastQueryColumnNames[] = oci_field_name($statement, $i);
+        $this->_lastQueryColumnNames[] = ($this->_caseQuery===CASE_LOWER)?strtolower(oci_field_name($statement, $i)):strtoupper(oci_field_name($statement, $i));
       }
       
       $rows = [];
@@ -642,7 +642,7 @@
       }
       $sql = 'BEGIN ' . $procedureName_ . '(' . $sql . '); END; ';
       
-      Eisodos::$logger->debug("Executing stored procedure: \n" . $sql);
+      Eisodos::$logger->trace("Executing stored procedure: \n" . $sql);
       
       $statement = $this->_parse($sql, $throwException_ ? 'Stored Procedure Exception' : '');
       if ($statement === false) {
