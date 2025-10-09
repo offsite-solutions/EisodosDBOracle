@@ -294,7 +294,7 @@
         
         foreach (explode(';', $connectSQL) as $sql) {
           if ($sql !== '') {
-            $this->query(RT_FIRST_ROW_FIRST_COLUMN, $sql);
+            $this->query(RT_NO_ROWS, $sql);
           }
         }
         
