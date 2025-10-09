@@ -324,7 +324,7 @@
       
       if (!$this->inTransaction()) {
         if ($savePoint_ !== NULL && $savePoint_ !== '') {
-          $this->query(RT_RAW, 'SAVEPOINT ' . $savePoint_);
+          $this->query(RT_NO_ROWS, 'SAVEPOINT ' . $savePoint_);
         }
         $this->_inTransaction = true;
       }
@@ -352,7 +352,7 @@
       
       if ($this->inTransaction()) {
         if ($savePoint_ !== NULL) {
-          $this->query(RT_RAW, 'ROLLBACK TO SAVEPOINT ' . $savePoint_);
+          $this->query(RT_NO_ROWS, 'ROLLBACK TO SAVEPOINT ' . $savePoint_);
           Eisodos::$logger->trace('Transaction rolled back to savepoint: ' . $savePoint_);
         } else {
           oci_rollback($this->_connection);
@@ -403,6 +403,16 @@
       }
       
       $rows = [];
+      
+      if ($resultTransformation_ === RT_NO_ROWS) {
+        if ($statement) {
+          oci_free_statement($statement);
+        }
+        
+        $this->_lastQueryTotalRows=0;
+        
+        return true;
+      }
       
       if ($resultTransformation_ === RT_RAW) {
         oci_fetch_all($statement, $rows, 0, -1, OCI_FETCHSTATEMENT_BY_ROW + OCI_ASSOC);
