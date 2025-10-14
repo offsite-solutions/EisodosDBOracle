@@ -8,10 +8,10 @@
       "email": "info@offsite-solutions.com"
     }
   ],
-  "minimum-stability": "stable",
+  "minimum-stability": "dev",
   "require": {
     "php": ">=8.4.0",
-    "offsite-solutions/eisodos": "^1.1.6",
+    "offsite-solutions/eisodos": "@dev",
     "ext-oci8": "*"
   },
   "autoload": {
