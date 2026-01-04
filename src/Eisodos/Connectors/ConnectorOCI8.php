@@ -736,7 +736,7 @@
         $result .= ', ';
       }
       
-      return $result;
+      return (string)$result;
     }
     
     /**
