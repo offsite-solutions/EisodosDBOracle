@@ -6,3 +6,6 @@
 /composer.dev.lock
 /composer_update_dev.sh
 /composer_update_prod.sh
+
+# codebase-memory-mcp local cache
+.codebase-memory/

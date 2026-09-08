@@ -3,11 +3,11 @@
 Eisodos Framework ORACLE Database Connector
 
 ## Prerequisites
-- PHP 8.4
-  - Tested with PHP 8.4
+- PHP 8.4+
+  - Tested with PHP 8.5
 - Installed ext-oci8
-  - Tested with ORACLE InstantClient 21.13
-  - Tested with oci8-3.4.0 extension
+  - Tested with ORACLE InstantClient 23.26
+  - Tested with oci8-3.4.1 extension (PDO_OCI 1.2.0)
 - Eisodos framework
   - Minimum version 1.1.0 (DBConnector Interface changed)
 
