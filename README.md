@@ -28,6 +28,7 @@ connection={TNS name}
 characterSet=
 autoCommit=false
 connectSQL=ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS';ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SS';ALTER SESSION SET NLS_SORT='hungarian';
+prefetch=5000
 ```
 
 ### ConnectMode
@@ -46,6 +47,10 @@ If it's **true**, every command will be auto-committed (not recommended). Defaul
 
 ### ConnectSQL
 Series of SQLs which will be executed right after successful connection.
+
+### Prefetch
+Number of rows fetched from the server in one round-trip (`oci_set_prefetch`). Default is **5000**.
+A higher value means fewer network round-trips on large result sets, especially against a remote database.
 
 ## Initialization
 ```

@@ -22,6 +22,7 @@
    * characterSet=if empty NLS_LANG environment variable will be used, ex: AL32UTF8
    * autoCommit=true|false(default)
    * connectSQL=list of query run after connection separated by ;
+   * prefetch=number of rows fetched from the server in one round-trip, default 5000
    */
   class ConnectorOCI8 implements DBConnectorInterface {
     
@@ -48,6 +49,9 @@
     
     /** @var int Switch case of response objects name */
     private int $_caseStoredProcedure = CASE_UPPER;
+    
+    /** @var int Rows prefetched in one round-trip (oci_set_prefetch) */
+    private int $_prefetch = 5000;
     
     public function __destruct() {
       $this->disconnect();
@@ -204,6 +208,9 @@
       
       $SQL_ = str_replace("\r\n", "\n", $SQL_); // for fixing end-of-line character in the PL/SQL in windows
       $statement = oci_parse($this->_connection, $SQL_);
+      if ($statement !== false) {
+        oci_set_prefetch($statement, $this->_prefetch);
+      }
       if ($statement === false) {
         $e = oci_error();
         Eisodos::$parameterHandler->setParam('DBError', 'Could not parse query - ' . $e['code'] . ' - ' . $e['message'] . "\n" . $SQL_);
@@ -280,6 +287,11 @@
         
         $this->_caseQuery = (Eisodos::$utils->safe_array_value($databaseConfig, 'casequery') === 'lower') ? CASE_LOWER : CASE_UPPER;
         $this->_caseStoredProcedure = (Eisodos::$utils->safe_array_value($databaseConfig, 'casestoredprocedure') === 'lower') ? CASE_LOWER : CASE_UPPER;
+        
+        $prefetch = Eisodos::$utils->safe_array_value($databaseConfig, 'prefetch');
+        if ($prefetch !== '') {
+          $this->_prefetch = max(0, (int)$prefetch);
+        }
         
         if (!$this->_autoCommit) {
           $this->_inTransaction = true;
