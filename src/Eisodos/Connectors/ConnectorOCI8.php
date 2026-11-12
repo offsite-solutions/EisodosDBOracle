@@ -5,6 +5,7 @@
   use Eisodos\Eisodos;
   use Eisodos\Interfaces\DBConnectorInterface;
   use Exception;
+  use OCILob;
   use RuntimeException;
   
   /**
@@ -66,7 +67,7 @@
       
       $dataType_ = strtolower($dataType_);
       
-      if ($dataType_ === '' || $value_ == '') {
+      if ($dataType_ === '' || ($value_ == '' && $dataType_ !== 'clob')) {
         return SQLT_CHR;
       }
       
@@ -139,7 +140,7 @@
         );
         
         // In case of descriptors, value is written after binding
-        if ($variableProperties['descriptor'] !== false && str_contains($variableProperties['mode_'], 'IN')) {
+        if ($variableProperties['descriptor'] !== false && str_contains($variableProperties['mode_'], 'IN') && $variableProperties['value'] !== '') {
           if ($variableProperties['descriptor']->writeTemporary($variableProperties['value'])) {
             Eisodos::$logger->trace('  OCI LOB descriptor for parameter ' . $variableName . ' written with ' . $variableProperties['descriptor']->size() . " bytes\n");
           } else {
@@ -154,17 +155,28 @@
      * @param array $boundVariables_ Bound variables
      * @return void
      */
-    private function _freeVariables(array $boundVariables_, array &$resultVariables_): void {
+    private function _freeVariables(array $boundVariables_, array &$resultVariables_ = []): void {
       
       foreach ($boundVariables_ as $variableName => &$variableProperties) {
         
-        // free OCILob objects
+        // read back and free OCILob objects
+        // descriptor is overwritten with NULL through the bound reference when the OUT value is NULL
         if ($variableProperties['descriptor'] !== false) {
-          oci_free_descriptor($variableProperties['descriptor']);
+          if (!str_contains($variableProperties['mode_'], 'OUT')) {
+            $resultVariables_[$variableName] = $variableProperties['value'];
+          } elseif ($variableProperties['descriptor'] instanceof OCILob) {
+            $lobValue = $variableProperties['descriptor']->load();
+            $resultVariables_[$variableName] = ($lobValue === false ? null : $lobValue);
+          } else {
+            $resultVariables_[$variableName] = null;
+          }
+          if ($variableProperties['descriptor'] instanceof OCILob) {
+            oci_free_descriptor($variableProperties['descriptor']);
+          }
           $variableProperties['descriptor'] = false;
+        } else {
+          $resultVariables_[$variableName] = $variableProperties['boundValue'];
         }
-        
-        $resultVariables_[$variableName] = $variableProperties['boundValue'];
         
         // value is overwritten by outgoing values in case of OUT, IN_OUT parameters
         if (str_contains($variableProperties['mode_'], 'OUT')) {
@@ -573,7 +585,7 @@
      */
     public function bind(array &$boundVariables_, string $variableName_, string $dataType_, string $value_, $inOut_ = 'IN'): void {
       $boundVariables_[$variableName_] = array();
-      if ($dataType_ === 'clob' && $value_ === '') // Empty CLOB bug / invalid LOB locator specified, force type to text
+      if ($dataType_ === 'clob' && $value_ === '' && !str_contains($inOut_, 'OUT')) // Empty CLOB bug / invalid LOB locator specified, force type to text
       {
         $boundVariables_[$variableName_]['type'] = 'text';
       } else {
